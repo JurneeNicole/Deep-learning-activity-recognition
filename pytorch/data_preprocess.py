@@ -7,6 +7,11 @@
 import numpy as np
 from torch.utils.data import Dataset, DataLoader
 
+class ToTensor:
+    def __call__(self, sample):
+        x, y = sample['x'], sample['y']
+        return {'x': torch.from_numpy(x).float(),
+                'y': torch.from_numpy(y)}
 
 # This is for parsing the X data, you can ignore it if you do not need preprocessing
 def format_data_x(datafile):
@@ -40,8 +45,9 @@ def format_data_y(datafile):
 # If not, parse the original dataset from scratch
 def load_data(data_folder):
     import os
-    if os.path.isfile(data_folder + 'data_har.npz') == True:
-        data = np.load(data_folder + 'data_har.npz')
+    print(data_folder)
+    if os.path.isfile(data_folder + '/data_har.npz') == True:
+        data = np.load(data_folder + '/data_har.npz')
         X_train = data['X_train']
         Y_train = data['Y_train']
         X_test = data['X_test']
@@ -49,7 +55,7 @@ def load_data(data_folder):
     else:
         # This for processing the dataset from scratch
         # After downloading the dataset, put it to somewhere that str_folder can find
-        str_folder = 'data_folder' + 'UCI HAR Dataset/'
+        str_folder = data_folder + 'UCI HAR Dataset/UCI HAR Dataset/'
         INPUT_SIGNAL_TYPES = [
             "body_acc_x_",
             "body_acc_y_",
@@ -61,13 +67,14 @@ def load_data(data_folder):
             "total_acc_y_",
             "total_acc_z_"
         ]
-
+        
         str_train_files = [str_folder + 'train/' + 'Inertial Signals/' + item + 'train.txt' for item in
                            INPUT_SIGNAL_TYPES]
         str_test_files = [str_folder + 'test/' + 'Inertial Signals/' +
                           item + 'test.txt' for item in INPUT_SIGNAL_TYPES]
         str_train_y = str_folder + 'train/y_train.txt'
         str_test_y = str_folder + 'test/y_test.txt'
+
 
         X_train = format_data_x(str_train_files)
         X_test = format_data_x(str_test_files)
