@@ -1,10 +1,3 @@
-# encoding=utf-8
-"""
-    Created on 21:11 2018/11/8 
-    @author: Jindong Wang
-"""
-
-
 from itertools import accumulate
 import data_preprocess
 import matplotlib.pyplot as plt
@@ -14,7 +7,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import argparse
-
+from sklearn.manifold import TSNE
 
 DEVICE = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 result = []
@@ -26,7 +19,8 @@ def get_args():
     parser.add_argument('--batchsize', type=int, default=128)
     parser.add_argument('--lr', type=float, default=.01)
     parser.add_argument('--momentum', type=float, default=.9)
-    parser.add_argument('--data_folder', type=str, default='../')
+    parser.add_argument('--data_folder', type=str, default='./')
+
     parser.add_argument('--seed', type=int, default=10)
     args = parser.parse_args()
     return args
@@ -101,6 +95,23 @@ if __name__ == '__main__':
     optimizer = optim.SGD(params=model.parameters(
     ), lr=args.lr, momentum=args.momentum)
     train(model, optimizer, train_loader, test_loader)
+    torch.save(model.state_dict(), 'model.pth')
     result = np.array(result, dtype=float)
     np.savetxt('result.csv', result, fmt='%.2f', delimiter=',')
+    # Load data
+    X,y,_,_= data_preprocess.load_data(args.data_folder)
+
+    # Flatten your input array
+    X_flat = X.reshape(X.shape[0], -1)
+
+    # Fit and transform your input data using the TSNE estimator
+    X_tsne = TSNE(n_components=2, perplexity=30, random_state=0).fit_transform(X_flat)
+
+
+    # Plot data
+    plt.figure()
+    plt.scatter(X_tsne[:, 0], X_tsne[:, 1], c=y, cmap='tab10')
+    plt.colorbar()
+    plt.title('t-SNE Visualization of Data Distribution')
+    plt.savefig('tsne_plot.png')
     plot()
